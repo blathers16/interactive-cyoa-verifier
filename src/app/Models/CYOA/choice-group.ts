@@ -1,3 +1,3 @@
 export interface ChoiceGroup {
-    id: string;
+  id: string;
 }

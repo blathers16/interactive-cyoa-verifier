@@ -1,1 +1,6 @@
 1.0 -   initial release
+
+1.1 -   forgot license and github link 
+
+1.2 -   restore accidentally removed duplicate choice detection
+        remove test file

@@ -1,4 +1,4 @@
-import { Requirement } from "./requirement";
+import { Requirement } from './requirement';
 
 export interface RowChoiceAddon {
   id: string;

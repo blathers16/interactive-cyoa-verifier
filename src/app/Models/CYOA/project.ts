@@ -1,8 +1,8 @@
-import { PointType } from "./point-type";
-import { ProjectGroup } from "./project-group";
-import { ProjectStyling } from "./project-styling";
-import { Row } from "./row";
-import { Word } from "./word";
+import { PointType } from './point-type';
+import { ProjectGroup } from './project-group';
+import { ProjectStyling } from './project-styling';
+import { Row } from './row';
+import { Word } from './word';
 
 export interface Project {
   isEditModeOnAll: boolean;

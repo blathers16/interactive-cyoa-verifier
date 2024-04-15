@@ -1,4 +1,4 @@
 export interface Word {
-    id: string;
-    replaceText: string;
+  id: string;
+  replaceText: string;
 }

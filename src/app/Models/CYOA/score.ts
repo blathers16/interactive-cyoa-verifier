@@ -1,8 +1,8 @@
-import { Requirement } from "./requirement";
+import { Requirement } from './requirement';
 
 export interface Score {
   id: string;
-  value: number
+  value: number;
   type: string;
   requireds: Requirement[];
   beforeText: string;

@@ -46,6 +46,7 @@ export class VerifierComponent {
   hasRequirementMissingChoice: boolean = false;
   hasRequirementNotSpecified: boolean = false;
   hasRequirementPointTypeNotSpecified: boolean = false;
+  hasRequirementWithWhitespace: boolean = false;
 
   // arrays
   activated: string[] = [];
@@ -55,7 +56,6 @@ export class VerifierComponent {
   rowsWithBadRequirements: Row[] = [];
   choicesWithBadRequirements: RowChoice[] = [];
   choicesWithBadScores: RowChoice[] = [];
-
 
   // the cyoa
   cyoa: Project | null = null;
@@ -73,9 +73,7 @@ export class VerifierComponent {
       return r.objects.some((c: RowChoice) => c.id === id);
     });
     if (rowsWithMatchingObject.length === 1) {
-      return rowsWithMatchingObject[0].objects.filter(
-        (c: RowChoice) => c.id === id
-      )[0];
+      return rowsWithMatchingObject[0].objects.filter((c: RowChoice) => c.id === id)[0];
     } else if (rowsWithMatchingObject.length > 1) {
       return null;
     } else {
@@ -84,38 +82,28 @@ export class VerifierComponent {
   }
 
   getRowForChoice(id: string): Row[] {
-    return this.cyoa!.rows.filter((r: Row) =>
-      r.objects.some((c: RowChoice) => c.id === id)
-    );
+    return this.cyoa!.rows.filter((r: Row) => r.objects.some((c: RowChoice) => c.id === id));
   }
 
   isValidSelectable(id: string): boolean {
     if (this.allChoices.some((c: RowChoice) => c.id === id)) {
       return true;
+    } else if (this.cyoa!.variables.some((v: Variable) => v.id === id)) {
+      return true;
     } else {
-      return this.cyoa!.variables.some((v: Variable) => v.id === id);
+      return this.cyoa!.pointTypes.some((p: PointType) => p.id === id);
     }
   }
 
   // validate that choices in requirements are still in cyoa
   validateRequirementChoiceExists(r: Requirement): boolean {
-    let valid = true;
+    let valid: boolean = true;
     if (!this.isValidSelectable(r.reqId) && r.reqId !== '') valid = false;
     if (!this.isValidSelectable(r.reqId1) && r.reqId1 !== '') valid = false;
     if (!this.isValidSelectable(r.reqId2) && r.reqId2 !== '') valid = false;
     if (!this.isValidSelectable(r.reqId3) && r.reqId3 !== '') valid = false;
-    if (
-      !r.requireds.every((rq: Requirement) =>
-        this.validateRequirementChoiceExists(rq)
-      )
-    )
-      valid = false;
-    if (
-      !r.orRequired.every(
-        (id: ID) => id.req === '' || this.isValidSelectable(id.req)
-      )
-    )
-      valid = false;
+    if (!r.requireds.every((rq: Requirement) => this.validateRequirementChoiceExists(rq))) valid = false;
+    if (!r.orRequired.every((id: ID) => id.req === '' || this.isValidSelectable(id.req))) valid = false;
 
     return valid;
   }
@@ -123,7 +111,7 @@ export class VerifierComponent {
   // validate that choices have been selected for choice type
   // requirements
   validateRequirementSpecified(r: Requirement): boolean {
-    let valid = false;
+    let valid: boolean = false;
     if (r.type === 'id') {
       if (r.reqId !== '') valid = true;
       if (r.reqId1 !== '') valid = true;
@@ -142,12 +130,7 @@ export class VerifierComponent {
     } else if (r.type === 'pointCompare') {
       valid = true;
     }
-    if (
-      !r.requireds.every((rq: Requirement) =>
-        this.validateRequirementSpecified(rq)
-      )
-    )
-      valid = false;
+    if (!r.requireds.every((rq: Requirement) => this.validateRequirementSpecified(rq))) valid = false;
 
     return valid;
   }
@@ -155,28 +138,34 @@ export class VerifierComponent {
   // validate that point types have been selected for point
   // requirements
   validateRequirementPointsSpecified(r: Requirement): boolean {
-    let valid = false;
+    let valid: boolean = false;
     if (r.type === 'id') {
       valid = true;
     } else if (r.type === 'or') {
       valid = true;
     } else if (r.type === 'points') {
-      if (this.pointTypes.some((p: PointType) => p.id === r.reqId))
-        valid = true;
+      if (this.pointTypes.some((p: PointType) => p.id === r.reqId)) valid = true;
     } else if (r.type === 'pointCompare') {
       valid = true;
-      if (!this.pointTypes.some((p: PointType) => p.id === r.reqId))
-        valid = false;
-      if (!this.pointTypes.some((p: PointType) => p.id === r.reqId1))
-        valid = false;
+      if (!this.pointTypes.some((p: PointType) => p.id === r.reqId)) valid = false;
+      if (!this.pointTypes.some((p: PointType) => p.id === r.reqId1)) valid = false;
     }
 
-    if (
-      !r.requireds.every((rq: Requirement) =>
-        this.validateRequirementPointsSpecified(rq)
-      )
-    )
-      valid = false;
+    if (!r.requireds.every((rq: Requirement) => this.validateRequirementPointsSpecified(rq))) valid = false;
+
+    return valid;
+  }
+
+  validateRequirementNoWhitespace(r: Requirement): boolean {
+    let valid: boolean = true;
+    if (r.reqId !== r.reqId.trim()) valid = false;
+    if (r.reqId1 !== r.reqId1.trim()) valid = false;
+    if (r.reqId2 !== r.reqId2.trim()) valid = false;
+    if (r.reqId3 !== r.reqId3.trim()) valid = false;
+
+    if (r.orRequired.some((id: ID) => id.req !== id.req.trim())) valid = false;
+
+    if (!r.requireds.every((req: Requirement) => this.validateRequirementNoWhitespace(req))) valid = false;
 
     return valid;
   }
@@ -184,11 +173,11 @@ export class VerifierComponent {
   async process(e: Event | null): Promise<void> {
     if (!e) return;
     const target = e.target as HTMLInputElement;
-    let infiles = target.files;
+    const infiles = target.files;
     // incase you canceled the file select, you won't lose your
     // previous result
     if (!infiles) return;
-    
+
     this.loading = true;
 
     //reset ui flags
@@ -200,6 +189,7 @@ export class VerifierComponent {
     this.hasRequirementMissingChoice = false;
     this.hasRequirementNotSpecified = false;
     this.hasRequirementPointTypeNotSpecified = false;
+    this.hasRequirementWithWhitespace = false;
 
     // reset arrays
     this.activated = [];
@@ -229,10 +219,10 @@ export class VerifierComponent {
 
     const ids = this.allChoices.map((c: RowChoice) => c.id);
 
-    this.hasDuplicateChoices = (new Set(ids)).size !== ids.length;
+    this.hasDuplicateChoices = new Set(ids).size !== ids.length;
 
     if (this.hasDuplicateChoices) {
-      let valuesSoFar = Object.create(null);
+      const valuesSoFar = Object.create(null);
       this.allChoices.forEach((c: RowChoice) => {
         if (c.id in valuesSoFar) {
           this.allChoices
@@ -262,6 +252,11 @@ export class VerifierComponent {
           this.rowsWithBadRequirements.push(r);
           this.hasRequirementPointTypeNotSpecified = true;
         }
+        const noWhitespace = this.validateRequirementNoWhitespace(req);
+        if (!noWhitespace) {
+          this.rowsWithBadRequirements.push(r);
+          this.hasRequirementWithWhitespace = true;
+        }
       });
       r.objects.forEach((c: RowChoice) => {
         c.requireds.forEach((req: Requirement) => {
@@ -279,6 +274,11 @@ export class VerifierComponent {
           if (!pointsSpecified) {
             this.choicesWithBadRequirements.push(c);
             this.hasRequirementPointTypeNotSpecified = true;
+          }
+          const noWhitespace = this.validateRequirementNoWhitespace(req);
+          if (!noWhitespace) {
+            this.choicesWithBadRequirements.push(c);
+            this.hasRequirementWithWhitespace = true;
           }
         });
         c.scores.forEach((s: Score) => {
@@ -298,12 +298,17 @@ export class VerifierComponent {
               this.choicesWithBadRequirements.push(c);
               this.hasRequirementPointTypeNotSpecified = true;
             }
+            const noWhitespace = this.validateRequirementNoWhitespace(req);
+            if (!noWhitespace) {
+              this.choicesWithBadRequirements.push(c);
+              this.hasRequirementWithWhitespace = true;
+            }
           });
-          if(!this.pointTypes.some((p: PointType) => s.id === p.id)) {
+          if (!this.pointTypes.some((p: PointType) => s.id === p.id)) {
             this.hasScoreWithoutPointType = true;
             this.choicesWithBadScores.push(c);
           }
-        })
+        });
       });
     });
 
