@@ -229,6 +229,8 @@ export class VerifierComponent {
 
     const ids = this.allChoices.map((c: RowChoice) => c.id);
 
+    this.hasDuplicateChoices = (new Set(ids)).size !== ids.length;
+
     if (this.hasDuplicateChoices) {
       let valuesSoFar = Object.create(null);
       this.allChoices.forEach((c: RowChoice) => {
