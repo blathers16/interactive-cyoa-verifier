@@ -1,0 +1,162 @@
+<div class="container pt-4 h-100">
+    <div ngbAccordion>
+      <div ngbAccordionItem>
+        <h2 ngbAccordionHeader>
+          <button ngbAccordionButton>About this Program</button>
+        </h2>
+        <div ngbAccordionCollapse>
+          <div ngbAccordionBody>
+            <ng-template>
+              
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+    @if (clearPicker) {
+    <input
+      class="form-control my-4"
+      id="input"
+      type="file"
+      (change)="process($event)"
+      multiple
+      accept="image/jpeg,image/png,application/json,application/javascript,text/html"
+    />
+    } @else {
+    <input
+      class="form-control my-4"
+      id="input"
+      type="file"
+      (change)="process($event)"
+      multiple
+      accept="image/jpeg,image/png,application/json,application/javascript,text/html"
+    />
+    }
+    <div class="d-flex justify-content-between">
+      <button
+        type="button"
+        class="btn my-button mb-3"
+        (click)="toggleClearPicker()"
+      >
+        Reset File Picker
+      </button>
+    </div>
+    @if(loading) {
+      <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    } @else {
+    <div>
+      @if (activated.length && showActivatedAlert) {
+        <ngb-alert type="warning" (closed)="closeActivatedAlert()">Warning! Some choices are activated!</ngb-alert>
+        <div>Activated Choices:</div>
+        @for (item of activated; track item) {
+          @if (getChoice(item)) {
+            <ngb-alert type="warning">{{getChoice(item)!.title}}</ngb-alert>
+          } @else {
+            <ngb-alert type="danger">Error! Choice with id {{item}} not in cyoa.</ngb-alert>
+          }
+        }
+        <div>Check if the above choices were activated intentionally.  If not, you can use the clear "clean selected choices" tool in the CYOA creator.</div>
+      }
+    </div>
+    <div>
+      @if (hasDuplicateChoices) {
+        <ngb-alert type="danger">Error! There are duplicate choices.</ngb-alert>
+        <div>Duplicate Choices:</div>
+        @for (duplicate of duplicateChoices; track duplicate.id) {
+          <ngb-alert type="danger">Error! Choice with title "{{duplicate.title}}" and ID {{duplicate.id}} in row titled "{{getRowForChoice(duplicate.id)[0].title}}" is in the CYOA more than once by ID.</ngb-alert>
+        }
+        <div>This error should probably never occur.  Most likely you manually modified a choice id.  Contact me on github if you have a valid usecase for duplicate choice IDs.</div>
+      }
+    </div>
+    <div>
+      @if (hasRequirementMissingChoice || hasRequirementNotSpecified || hasRequirementPointTypeNotSpecified) {
+        @if (hasRequirementMissingChoice){
+          <ngb-alert type="danger">Error! There is at least one requirement specifing a choice that does not exist.</ngb-alert>
+        }
+        @if (hasRequirementNotSpecified){
+          <ngb-alert type="danger">Error! There is at least one requirement that does not specify a choice.</ngb-alert>
+        }
+        @if (hasRequirementPointTypeNotSpecified){
+          <ngb-alert type="danger">Error! There is at least one point type requirement where the point type has not been selected.</ngb-alert>
+        }
+        <div>Rows with Requirement Errors:</div>
+        @for (row of rowsWithBadRequirements; track row.id) {
+          <ngb-alert type="danger">Error! Row with title "{{row.title}}"" and ID {{row.id}} has at least one invalid requirement.</ngb-alert>
+          @for (requirement of row.requireds; track requirement.id) {
+            @if(!validateRequirementChoiceExists(requirement)) {
+              <div>One of the following choices does not exist:</div>
+              @if (requirement.reqId){
+                {{getChoice(requirement.reqId) ? getChoice(requirement.reqId)!.title : requirement.reqId}}
+              }
+              @if (requirement.reqId1){
+                {{getChoice(requirement.reqId1) ? getChoice(requirement.reqId1)!.title : requirement.reqId1}}
+              }
+              @if (requirement.reqId2){
+                {{getChoice(requirement.reqId2) ? getChoice(requirement.reqId2)!.title : requirement.reqId2}}
+              }
+              @if (requirement.reqId3){
+                {{getChoice(requirement.reqId3) ? getChoice(requirement.reqId3)!.title : requirement.reqId3}}
+              }
+              @for (orReq of requirement.orRequired; track orReq.req ) {
+                @if(orReq.req) {
+                  {{getChoice(orReq.req) ? getChoice(orReq.req)!.title : orReq.req}}
+                }
+              }
+            }
+            @if(!validateRequirementSpecified(requirement)) {
+              <div>This row has a requirement that does not specify a choice.</div>
+            }
+            @if(!validateRequirementPointsSpecified(requirement)) {
+              <div>This row has a requirement that does not specify a point type.</div>
+            }
+          }
+        }
+        @for (choice of choicesWithBadRequirements; track choice.id) {
+          <ngb-alert type="danger">Error! Choice with title "{{choice.title}}" and ID {{choice.id}} in Row titled {{getRowForChoice(choice.id)[0].title}} has at least one invalid requirement.</ngb-alert>
+          @for (requirement of choice.requireds; track requirement.id) {
+            @if(!validateRequirementChoiceExists(requirement)) {
+              <div>One of the following choices does not exist:</div>
+              @if (requirement.reqId){
+                {{getChoice(requirement.reqId) ? getChoice(requirement.reqId)!.title : requirement.reqId}}
+              }
+              @if (requirement.reqId1){
+                {{getChoice(requirement.reqId1) ? getChoice(requirement.reqId1)!.title : requirement.reqId1}}
+              }
+              @if (requirement.reqId2){
+                {{getChoice(requirement.reqId2) ? getChoice(requirement.reqId2)!.title : requirement.reqId2}}
+              }
+              @if (requirement.reqId3){
+                {{getChoice(requirement.reqId3) ? getChoice(requirement.reqId3)!.title : requirement.reqId3}}
+              }
+              @for (orReq of requirement.orRequired; track orReq.req ) {
+                @if(orReq.req) {
+                  {{getChoice(orReq.req) ? getChoice(orReq.req)!.title : orReq.req}}
+                }
+              }
+            }
+            @if(!validateRequirementSpecified(requirement)) {
+              <div>This choice has a requirement that does not specify a choice.</div>
+            }
+            @if(!validateRequirementPointsSpecified(requirement)) {
+              <div>This choice has a requirement that does not specify a point type.</div>
+            }
+          }
+        }
+        <div>Check all requirements on the above rows and choices.  Make sure to re-verify the CYOA after making corrections.</div>
+      }
+    </div>
+    <div>
+      @if (hasScoreWithoutPointType) {
+        <ngb-alert type="danger">Error! One or more scores has not had a point type selected.</ngb-alert>
+        @for (choice of choicesWithBadScores; track choice.id) {
+          <ngb-alert type="danger">Error! Choice with title "{{choice.title}}" and ID {{choice.id}} has at least one score with a missing point type.</ngb-alert>
+        }
+      }
+    </div>
+  }
+  </div>
+  
