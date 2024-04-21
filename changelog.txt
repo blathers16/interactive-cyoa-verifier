@@ -5,7 +5,10 @@
 1.2 -   restore accidentally removed duplicate choice detection
         remove test file
 
-1.3 -   fixed a bug that where duplicate choices caused the
+1.3 -     bugfixes
+        nested requirements
+
+1.4 -   fixed a bug that where duplicate choices caused the
         verifier to wig out
         improved visual formatting
         provided all rows in which a choice occur
