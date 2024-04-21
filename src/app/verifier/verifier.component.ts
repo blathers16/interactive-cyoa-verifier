@@ -29,10 +29,10 @@ import { Score } from '../Models/CYOA/score';
     NgbAccordionCollapse,
     NgbAccordionBody,
     NgbAccordionDirective,
-    NgbAlert,
+    NgbAlert
   ],
   templateUrl: './verifier.component.html',
-  styleUrl: './verifier.component.scss',
+  styleUrl: './verifier.component.scss'
 })
 export class VerifierComponent {
   // ui flags
@@ -47,6 +47,7 @@ export class VerifierComponent {
   hasRequirementNotSpecified: boolean = false;
   hasRequirementPointTypeNotSpecified: boolean = false;
   hasRequirementWithWhitespace: boolean = false;
+  hasNonNestableRequirement: boolean = false;
 
   // arrays
   activated: string[] = [];
@@ -54,8 +55,10 @@ export class VerifierComponent {
   pointTypes: PointType[] = [];
   duplicateChoices: RowChoice[] = [];
   rowsWithBadRequirements: Row[] = [];
+  rowsWithNonNestableRequirements: Row[] = [];
   choicesWithBadRequirements: RowChoice[] = [];
   choicesWithBadScores: RowChoice[] = [];
+  choicesWithNonNestableRequirements: RowChoice[] = [];
 
   // the cyoa
   cyoa: Project | null = null;
@@ -95,6 +98,13 @@ export class VerifierComponent {
     }
   }
 
+  // validate that requirement supports nesting
+  // requirements created in older versions of the
+  // interactive CYOA creator may not
+  validateRequirementsNestable(r: Requirement): boolean {
+    return r.hasOwnProperty('requireds');
+  }
+
   // validate that choices in requirements are still in cyoa
   validateRequirementChoiceExists(r: Requirement): boolean {
     let valid: boolean = true;
@@ -102,7 +112,11 @@ export class VerifierComponent {
     if (!this.isValidSelectable(r.reqId1) && r.reqId1 !== '') valid = false;
     if (!this.isValidSelectable(r.reqId2) && r.reqId2 !== '') valid = false;
     if (!this.isValidSelectable(r.reqId3) && r.reqId3 !== '') valid = false;
-    if (!r.requireds.every((rq: Requirement) => this.validateRequirementChoiceExists(rq))) valid = false;
+    try {
+      if (!r.requireds.every((rq: Requirement) => this.validateRequirementChoiceExists(rq))) valid = false;
+    } catch (e: any) {
+      console.log(e);
+    }
     if (!r.orRequired.every((id: ID) => id.req === '' || this.isValidSelectable(id.req))) valid = false;
 
     return valid;
@@ -130,8 +144,11 @@ export class VerifierComponent {
     } else if (r.type === 'pointCompare') {
       valid = true;
     }
-    if (!r.requireds.every((rq: Requirement) => this.validateRequirementSpecified(rq))) valid = false;
-
+    try {
+      if (!r.requireds.every((rq: Requirement) => this.validateRequirementSpecified(rq))) valid = false;
+    } catch (e: any) {
+      console.log(e);
+    }
     return valid;
   }
 
@@ -150,9 +167,11 @@ export class VerifierComponent {
       if (!this.pointTypes.some((p: PointType) => p.id === r.reqId)) valid = false;
       if (!this.pointTypes.some((p: PointType) => p.id === r.reqId1)) valid = false;
     }
-
-    if (!r.requireds.every((rq: Requirement) => this.validateRequirementPointsSpecified(rq))) valid = false;
-
+    try {
+      if (!r.requireds.every((rq: Requirement) => this.validateRequirementPointsSpecified(rq))) valid = false;
+    } catch (e: any) {
+      console.log(e);
+    }
     return valid;
   }
 
@@ -164,9 +183,12 @@ export class VerifierComponent {
     if (r.reqId3 !== r.reqId3.trim()) valid = false;
 
     if (r.orRequired.some((id: ID) => id.req !== id.req.trim())) valid = false;
-
-    if (!r.requireds.every((req: Requirement) => this.validateRequirementNoWhitespace(req))) valid = false;
-
+    
+    try {
+      if (!r.requireds.every((req: Requirement) => this.validateRequirementNoWhitespace(req))) valid = false;
+    } catch (e: any) {
+      console.log(e);
+    }
     return valid;
   }
 
@@ -190,6 +212,7 @@ export class VerifierComponent {
     this.hasRequirementNotSpecified = false;
     this.hasRequirementPointTypeNotSpecified = false;
     this.hasRequirementWithWhitespace = false;
+    this.hasNonNestableRequirement = false;
 
     // reset arrays
     this.activated = [];
@@ -197,7 +220,9 @@ export class VerifierComponent {
     this.pointTypes = [];
     this.duplicateChoices = [];
     this.rowsWithBadRequirements = [];
+    this.rowsWithNonNestableRequirements = [];
     this.choicesWithBadRequirements = [];
+    this.choicesWithNonNestableRequirements = [];
 
     const infile: File = infiles[0];
 
@@ -221,13 +246,17 @@ export class VerifierComponent {
 
     this.hasDuplicateChoices = new Set(ids).size !== ids.length;
 
+    this.hasDuplicateChoices = true;
+
     if (this.hasDuplicateChoices) {
       const valuesSoFar = Object.create(null);
       this.allChoices.forEach((c: RowChoice) => {
         if (c.id in valuesSoFar) {
           this.allChoices
-            .filter((c2: RowChoice) => (c2.id = c.id))
-            .forEach((c3: RowChoice) => this.duplicateChoices.push(c3));
+            .filter((c2: RowChoice) => (c2.id === c.id))
+            .forEach((c3: RowChoice) => {
+              this.duplicateChoices.push(c3)
+        })
         }
         valuesSoFar[c.id] = true;
       });
@@ -257,6 +286,11 @@ export class VerifierComponent {
           this.rowsWithBadRequirements.push(r);
           this.hasRequirementWithWhitespace = true;
         }
+        const nestable = this.validateRequirementsNestable(req);
+        if (!nestable) {
+          this.rowsWithNonNestableRequirements.push(r);
+          this.hasNonNestableRequirement = true;
+        }
       });
       r.objects.forEach((c: RowChoice) => {
         c.requireds.forEach((req: Requirement) => {
@@ -279,6 +313,11 @@ export class VerifierComponent {
           if (!noWhitespace) {
             this.choicesWithBadRequirements.push(c);
             this.hasRequirementWithWhitespace = true;
+          }
+          const nestable = this.validateRequirementsNestable(req);
+          if (!nestable) {
+            this.choicesWithNonNestableRequirements.push(c);
+            this.hasNonNestableRequirement = true;
           }
         });
         c.scores.forEach((s: Score) => {
@@ -303,6 +342,11 @@ export class VerifierComponent {
               this.choicesWithBadRequirements.push(c);
               this.hasRequirementWithWhitespace = true;
             }
+            const nestable = this.validateRequirementsNestable(req);
+            if (!nestable) {
+              this.choicesWithNonNestableRequirements.push(c);
+              this.hasNonNestableRequirement = true;
+            }
           });
           if (!this.pointTypes.some((p: PointType) => s.id === p.id)) {
             this.hasScoreWithoutPointType = true;
@@ -311,6 +355,7 @@ export class VerifierComponent {
         });
       });
     });
+
 
     this.activated = this.cyoa!.activated;
 

@@ -43,9 +43,9 @@
     </div>
   } @else {
     @if (activated.length && showActivatedAlert) {
-      <div>
+      <div class="mb-5">
         <ngb-alert type="warning" (closed)="closeActivatedAlert()">Warning! Some choices are activated!</ngb-alert>
-        <div>Activated Choices:</div>
+        <div class="mb-2">Activated Choices:</div>
         @for (item of activated; track item) {
           @if (getChoice(item)) {
             <ngb-alert type="warning">{{ getChoice(item)!.title }}</ngb-alert>
@@ -60,24 +60,26 @@
       </div>
     }
     @if (hasDuplicateChoices) {
-      <div>
+      <div class="mb-5">
         <ngb-alert type="danger">Error! There are duplicate choices.</ngb-alert>
-        <div>Duplicate Choices:</div>
+        <div class="mb-2">Duplicate Choices:</div>
         @for (duplicate of duplicateChoices; track duplicate.id) {
           <ngb-alert type="danger"
-            >Error! Choice with title "{{ duplicate.title }}" and ID {{ duplicate.id }} in row titled "{{
-              getRowForChoice(duplicate.id)[0].title
-            }}" is in the CYOA more than once by ID.</ngb-alert
+            >Error! Choice with title "{{ duplicate.title }}" and ID "{{ duplicate.id }}" in Row(s) with (title, id)
+            @for (row of getRowForChoice(duplicate.id); track row.id) {
+              ("{{ row.title }}",&nbsp;"{{ row.id }}")&nbsp;
+            }
+            is in the CYOA more than once by ID.</ngb-alert
           >
         }
         <div>
-          This error should probably never occur. Most likely you manually modified a choice id. Contact me on github if
-          you have a valid usecase for duplicate choice IDs.
+          This error should probably never occur. Most likely you manually modified a choice id or cloned a choice and
+          forgot to change the id. Contact me on github if you have a valid usecase for duplicate choice IDs.
         </div>
       </div>
     }
     @if (hasRequirementMissingChoice || hasRequirementNotSpecified || hasRequirementPointTypeNotSpecified) {
-      <div>
+      <div class="mb-5">
         @if (hasRequirementMissingChoice) {
           <ngb-alert type="danger"
             >Error! There is at least one requirement specifing a choice that does not exist.</ngb-alert
@@ -91,207 +93,226 @@
             >Error! There is at least one point type requirement where the point type has not been selected.</ngb-alert
           >
         }
-        <div>Rows with Requirement Errors:</div>
+        <div class="mb-2">Rows with Requirement Errors:</div>
         @for (row of rowsWithBadRequirements; track row.id) {
           <ngb-alert type="danger"
-            >Error! Row with title "{{ row.title }}"" and ID {{ row.id }} has at least one invalid
+            >Error! Row with title "{{ row.title }}"" and ID "{{ row.id }}" has at least one invalid
             requirement.</ngb-alert
           >
           @for (requirement of row.requireds; track requirement.id) {
             @if (!validateRequirementChoiceExists(requirement)) {
               <div>One of the following choices does not exist:</div>
-              @if (requirement.reqId) {
-                {{ getChoice(requirement.reqId) ? getChoice(requirement.reqId)!.title : requirement.reqId }}
-              }
-              @if (requirement.reqId1) {
-                {{ getChoice(requirement.reqId1) ? getChoice(requirement.reqId1)!.title : requirement.reqId1 }}
-              }
-              @if (requirement.reqId2) {
-                {{ getChoice(requirement.reqId2) ? getChoice(requirement.reqId2)!.title : requirement.reqId2 }}
-              }
-              @if (requirement.reqId3) {
-                {{ getChoice(requirement.reqId3) ? getChoice(requirement.reqId3)!.title : requirement.reqId3 }}
-              }
-              @for (orReq of requirement.orRequired; track orReq.req) {
-                @if (orReq.req) {
-                  {{ getChoice(orReq.req) ? getChoice(orReq.req)!.title : orReq.req }}
+              <ul>
+                @if (requirement.reqId) {
+                  <li>"{{ requirement.reqId }}"</li>
                 }
-              }
+                @if (requirement.reqId1) {
+                  <li>"{{ requirement.reqId1 }}"</li>
+                }
+                @if (requirement.reqId2) {
+                  <li>"{{ requirement.reqId2 }}"</li>
+                }
+                @if (requirement.reqId3) {
+                  <li>"{{ requirement.reqId3 }}"</li>
+                }
+                @for (orReq of requirement.orRequired; track orReq.req) {
+                  @if (orReq.req) {
+                    <li>"{{ orReq.req }}"</li>
+                  }
+                }
+              </ul>
             }
             @if (!validateRequirementNoWhitespace(requirement)) {
               <div>One of the following Choice IDs in a requirement on this Row has whitespace:</div>
-              @if (requirement.reqId !== requirement.reqId.trim()) {
-                {{ requirement.reqId }}
-              }
-              @if (requirement.reqId1 !== requirement.reqId1.trim()) {
-                {{ requirement.reqId1 }}
-              }
-              @if (requirement.reqId2 !== requirement.reqId2.trim()) {
-                {{ requirement.reqId2 }}
-              }
-              @if (requirement.reqId3 !== requirement.reqId3.trim()) {
-                {{ requirement.reqId3 }}
-              }
-              @for (orReq of requirement.orRequired; track orReq.req) {
-                @if (orReq.req !== orReq.req.trim()) {
-                  {{ orReq.req }}
+              <ul>
+                @if (requirement.reqId !== requirement.reqId.trim()) {
+                  <li>"{{ requirement.reqId }}"</li>
                 }
-              }
+                @if (requirement.reqId1 !== requirement.reqId1.trim()) {
+                  <li>"{{ requirement.reqId1 }}"</li>
+                }
+                @if (requirement.reqId2 !== requirement.reqId2.trim()) {
+                  <li>"{{ requirement.reqId2 }}"</li>
+                }
+                @if (requirement.reqId3 !== requirement.reqId3.trim()) {
+                  <li>"{{ requirement.reqId3 }}"</li>
+                }
+                @for (orReq of requirement.orRequired; track orReq.req) {
+                  @if (orReq.req !== orReq.req.trim()) {
+                    <li>"{{ orReq.req }}"</li>
+                  }
+                }
+              </ul>
             }
             @if (!validateRequirementSpecified(requirement)) {
-              <div>This row has a requirement that does not specify a choice.</div>
+              <div class="mb-2">This row has a requirement that does not specify a choice.</div>
             }
             @if (!validateRequirementPointsSpecified(requirement)) {
-              <div>This row has a requirement that does not specify a point type.</div>
+              <div class="mb-2">This row has a requirement that does not specify a point type.</div>
             }
             @for (requirement of requirement.requireds; track requirement.id) {
               @if (!validateRequirementChoiceExists(requirement)) {
                 <div>One of the following choices in a nested requirement on this row does not exist:</div>
-                @if (requirement.reqId) {
-                  {{ getChoice(requirement.reqId) ? getChoice(requirement.reqId)!.title : requirement.reqId }}
-                }
-                @if (requirement.reqId1) {
-                  {{ getChoice(requirement.reqId1) ? getChoice(requirement.reqId1)!.title : requirement.reqId1 }}
-                }
-                @if (requirement.reqId2) {
-                  {{ getChoice(requirement.reqId2) ? getChoice(requirement.reqId2)!.title : requirement.reqId2 }}
-                }
-                @if (requirement.reqId3) {
-                  {{ getChoice(requirement.reqId3) ? getChoice(requirement.reqId3)!.title : requirement.reqId3 }}
-                }
-                @for (orReq of requirement.orRequired; track orReq.req) {
-                  @if (orReq.req) {
-                    {{ getChoice(orReq.req) ? getChoice(orReq.req)!.title : orReq.req }}
+                <ul>
+                  @if (requirement.reqId) {
+                    <li>"{{ requirement.reqId }}"</li>
                   }
-                }
+                  @if (requirement.reqId1) {
+                    <li>"{{ requirement.reqId1 }}"</li>
+                  }
+                  @if (requirement.reqId2) {
+                    <li>"{{ requirement.reqId2 }}"</li>
+                  }
+                  @if (requirement.reqId3) {
+                    <li>"{{ requirement.reqId3 }}"</li>
+                  }
+                  @for (orReq of requirement.orRequired; track orReq.req) {
+                    @if (orReq.req) {
+                      <li>"{{ orReq.req }}"</li>
+                    }
+                  }
+                </ul>
               }
               @if (!validateRequirementNoWhitespace(requirement)) {
                 <div>One of the following Choice IDs in a nested requirement on this Row has whitespace:</div>
-                @if (requirement.reqId !== requirement.reqId.trim()) {
-                  {{ requirement.reqId }}
-                }
-                @if (requirement.reqId1 !== requirement.reqId1.trim()) {
-                  {{ requirement.reqId1 }}
-                }
-                @if (requirement.reqId2 !== requirement.reqId2.trim()) {
-                  {{ requirement.reqId2 }}
-                }
-                @if (requirement.reqId3 !== requirement.reqId3.trim()) {
-                  {{ requirement.reqId3 }}
-                }
-                @for (orReq of requirement.orRequired; track orReq.req) {
-                  @if (orReq.req !== orReq.req.trim()) {
-                    {{ orReq.req }}
+                <ul>
+                  @if (requirement.reqId !== requirement.reqId.trim()) {
+                    <li>"{{ requirement.reqId }}"</li>
                   }
-                }
+                  @if (requirement.reqId1 !== requirement.reqId1.trim()) {
+                    <li>"{{ requirement.reqId1 }}"</li>
+                  }
+                  @if (requirement.reqId2 !== requirement.reqId2.trim()) {
+                    <li>"{{ requirement.reqId2 }}"</li>
+                  }
+                  @if (requirement.reqId3 !== requirement.reqId3.trim()) {
+                    <li>"{{ requirement.reqId3 }}"</li>
+                  }
+                  @for (orReq of requirement.orRequired; track orReq.req) {
+                    @if (orReq.req !== orReq.req.trim()) {
+                      <li>"{{ orReq.req }}"</li>
+                    }
+                  }
+                </ul>
               }
               @if (!validateRequirementSpecified(requirement)) {
-                <div>This row has a nested requirement that does not specify a choice.</div>
+                <div class="mb-2">This row has a nested requirement that does not specify a choice.</div>
               }
               @if (!validateRequirementPointsSpecified(requirement)) {
-                <div>This row has a nested requirement that does not specify a point type.</div>
+                <div class="mb-2">This row has a nested requirement that does not specify a point type.</div>
               }
             }
           }
         }
         @for (choice of choicesWithBadRequirements; track choice.id) {
           <ngb-alert type="danger"
-            >Error! Choice with title "{{ choice.title }}" and ID {{ choice.id }} in Row titled
-            {{ getRowForChoice(choice.id)[0].title }} has at least one invalid requirement.</ngb-alert
+            >Error! Choice with title "{{ choice.title }}" and ID "{{ choice.id }}" in Row(s) with (title, id)
+            @for (row of getRowForChoice(choice.id); track row.id) {
+              ("{{ row.title }}",&nbsp;"{{ row.id }}")&nbsp;
+            }
+            has at least one invalid requirement.</ngb-alert
           >
           @for (requirement of choice.requireds; track requirement.id) {
             @if (!validateRequirementChoiceExists(requirement)) {
               <div>One of the following choices in a requirement does not exist:</div>
-              @if (requirement.reqId) {
-                {{ getChoice(requirement.reqId) ? getChoice(requirement.reqId)!.title : requirement.reqId }}
-              }
-              @if (requirement.reqId1) {
-                {{ getChoice(requirement.reqId1) ? getChoice(requirement.reqId1)!.title : requirement.reqId1 }}
-              }
-              @if (requirement.reqId2) {
-                {{ getChoice(requirement.reqId2) ? getChoice(requirement.reqId2)!.title : requirement.reqId2 }}
-              }
-              @if (requirement.reqId3) {
-                {{ getChoice(requirement.reqId3) ? getChoice(requirement.reqId3)!.title : requirement.reqId3 }}
-              }
-              @for (orReq of requirement.orRequired; track orReq.req) {
-                @if (orReq.req) {
-                  {{ getChoice(orReq.req) ? getChoice(orReq.req)!.title : orReq.req }}
+              <ul>
+                @if (requirement.reqId) {
+                  <li>"{{ requirement.reqId }}"</li>
                 }
-              }
+                @if (requirement.reqId1) {
+                  <li>"{{ requirement.reqId1 }}"</li>
+                }
+                @if (requirement.reqId2) {
+                  <li>"{{ requirement.reqId2 }}"</li>
+                }
+                @if (requirement.reqId3) {
+                  <li>"{{ requirement.reqId3 }}"</li>
+                }
+                @for (orReq of requirement.orRequired; track orReq.req) {
+                  @if (orReq.req) {
+                    <li>"{{ orReq.req }}"</li>
+                  }
+                }
+              </ul>
             }
             @if (!validateRequirementNoWhitespace(requirement)) {
               <div>One of the following Choice IDs in a requirement on this Choice has whitespace:</div>
-              @if (requirement.reqId !== requirement.reqId.trim()) {
-                {{ requirement.reqId }}
-              }
-              @if (requirement.reqId1 !== requirement.reqId1.trim()) {
-                {{ requirement.reqId1 }}
-              }
-              @if (requirement.reqId2 !== requirement.reqId2.trim()) {
-                {{ requirement.reqId2 }}
-              }
-              @if (requirement.reqId3 !== requirement.reqId3.trim()) {
-                {{ requirement.reqId3 }}
-              }
-              @for (orReq of requirement.orRequired; track orReq.req) {
-                @if (orReq.req !== orReq.req.trim()) {
-                  {{ orReq.req }}
+              <ul>
+                @if (requirement.reqId !== requirement.reqId.trim()) {
+                  <li>"{{ requirement.reqId }}"</li>
                 }
-              }
+                @if (requirement.reqId1 !== requirement.reqId1.trim()) {
+                  <li>"{{ requirement.reqId1 }}"</li>
+                }
+                @if (requirement.reqId2 !== requirement.reqId2.trim()) {
+                  <li>"{{ requirement.reqId2 }}"</li>
+                }
+                @if (requirement.reqId3 !== requirement.reqId3.trim()) {
+                  <li>"{{ requirement.reqId3 }}"</li>
+                }
+                @for (orReq of requirement.orRequired; track orReq.req) {
+                  @if (orReq.req !== orReq.req.trim()) {
+                    <li>"{{ orReq.req }}"</li>
+                  }
+                }
+              </ul>
             }
             @if (!validateRequirementSpecified(requirement)) {
-              <div>This choice has a requirement that does not specify a choice.</div>
+              <div class="mb-2">This choice has a requirement that does not specify a choice.</div>
             }
             @if (!validateRequirementPointsSpecified(requirement)) {
-              <div>This choice has a requirement that does not specify a point type.</div>
+              <div class="mb-2">This choice has a requirement that does not specify a point type.</div>
             }
             @for (requirement of requirement.requireds; track requirement.id) {
               @if (!validateRequirementChoiceExists(requirement)) {
                 <div>One of the following choices in a nested requirement does not exist:</div>
-                @if (requirement.reqId) {
-                  {{ getChoice(requirement.reqId) ? getChoice(requirement.reqId)!.title : requirement.reqId }}
-                }
-                @if (requirement.reqId1) {
-                  {{ getChoice(requirement.reqId1) ? getChoice(requirement.reqId1)!.title : requirement.reqId1 }}
-                }
-                @if (requirement.reqId2) {
-                  {{ getChoice(requirement.reqId2) ? getChoice(requirement.reqId2)!.title : requirement.reqId2 }}
-                }
-                @if (requirement.reqId3) {
-                  {{ getChoice(requirement.reqId3) ? getChoice(requirement.reqId3)!.title : requirement.reqId3 }}
-                }
-                @for (orReq of requirement.orRequired; track orReq.req) {
-                  @if (orReq.req) {
-                    {{ getChoice(orReq.req) ? getChoice(orReq.req)!.title : orReq.req }}
+                <ul>
+                  @if (requirement.reqId) {
+                    <li>"{{ requirement.reqId }}"</li>
                   }
-                }
+                  @if (requirement.reqId1) {
+                    <li>"{{ requirement.reqId1 }}"</li>
+                  }
+                  @if (requirement.reqId2) {
+                    <li>"{{ requirement.reqId2 }}"</li>
+                  }
+                  @if (requirement.reqId3) {
+                    <li>"{{ requirement.reqId3 }}"</li>
+                  }
+                  @for (orReq of requirement.orRequired; track orReq.req) {
+                    @if (orReq.req) {
+                      <li>"{{ orReq.req }}"</li>
+                    }
+                  }
+                </ul>
               }
               @if (!validateRequirementNoWhitespace(requirement)) {
                 <div>One of the following Choice IDs in a nested requirement on this Choice has whitespace:</div>
-                @if (requirement.reqId !== requirement.reqId.trim()) {
-                  {{ requirement.reqId }}
-                }
-                @if (requirement.reqId1 !== requirement.reqId1.trim()) {
-                  {{ requirement.reqId1 }}
-                }
-                @if (requirement.reqId2 !== requirement.reqId2.trim()) {
-                  {{ requirement.reqId2 }}
-                }
-                @if (requirement.reqId3 !== requirement.reqId3.trim()) {
-                  {{ requirement.reqId3 }}
-                }
-                @for (orReq of requirement.orRequired; track orReq.req) {
-                  @if (orReq.req !== orReq.req.trim()) {
-                    {{ orReq.req }}
+                <ul>
+                  @if (requirement.reqId !== requirement.reqId.trim()) {
+                    <li>"{{ requirement.reqId }}"</li>
                   }
-                }
+                  @if (requirement.reqId1 !== requirement.reqId1.trim()) {
+                    <li>"{{ requirement.reqId1 }}"</li>
+                  }
+                  @if (requirement.reqId2 !== requirement.reqId2.trim()) {
+                    <li>"{{ requirement.reqId2 }}"</li>
+                  }
+                  @if (requirement.reqId3 !== requirement.reqId3.trim()) {
+                    <li>"{{ requirement.reqId3 }}"</li>
+                  }
+                  @for (orReq of requirement.orRequired; track orReq.req) {
+                    @if (orReq.req !== orReq.req.trim()) {
+                      <li>"{{ orReq.req }}"</li>
+                    }
+                  }
+                </ul>
               }
               @if (!validateRequirementSpecified(requirement)) {
-                <div>This choice has a nested requirement that does not specify a choice.</div>
+                <div class="mb-2">This choice has a nested requirement that does not specify a choice.</div>
               }
               @if (!validateRequirementPointsSpecified(requirement)) {
-                <div>This choice has a nested requirement that does not specify a point type.</div>
+                <div class="mb-2">This choice has a nested requirement that does not specify a point type.</div>
               }
             }
           }
@@ -302,13 +323,48 @@
         </div>
       </div>
     }
+    @if (hasNonNestableRequirement) {
+      <div class="mb-5">
+        <ngb-alert type="warning"
+          >Warning! One or more requirements is of the legacy type and lacks nestability.</ngb-alert
+        >
+        @if (rowsWithNonNestableRequirements.length) {
+          <div class="mb-2">The following Row(s) have requirement(s) that lack support for nesting.</div>
+          @for (row of rowsWithNonNestableRequirements; track row.id) {
+            <ngb-alert type="warning"
+              >Warning! Row with id "{{ row.id }}" and title "{{ row.title }}" has at least one legacy
+              requiremnt.</ngb-alert
+            >
+          }
+        }
+        @if (choicesWithNonNestableRequirements.length) {
+          <div class="mb-2">The following Choices(s) have requirement(s) that lack support for nesting.</div>
+          @for (choice of choicesWithNonNestableRequirements; track choice.id) {
+            <ngb-alert type="warning"
+              >Warning! Choice with id "{{ choice.id }}" and title "{{ choice.title }}" in Row(s) with (title, id)
+              @for (row of getRowForChoice(choice.id); track row.id) {
+                ("{{ row.title }}",&nbsp;"{{ row.id }}")&nbsp;
+              }
+              has at least one legacy requiremnt.</ngb-alert
+            >
+          }
+        }
+        <div>
+          To fix this, delete and recreate the legacy requirement. You can confirm if a requirement is of the legacy
+          type by attempting to add a requirement to it. If nothing happens, the requirement is of the legacy type.
+        </div>
+      </div>
+    }
     @if (hasScoreWithoutPointType) {
-      <div>
+      <div class="mb-5">
         <ngb-alert type="danger">Error! One or more scores has not had a point type selected.</ngb-alert>
         @for (choice of choicesWithBadScores; track choice.id) {
           <ngb-alert type="danger"
-            >Error! Choice with title "{{ choice.title }}" and ID {{ choice.id }} in Row
-            {{ getRowForChoice(choice.id)[0].title }} at least one score with a missing point type.</ngb-alert
+            >Error! Choice with title "{{ choice.title }}" and ID "{{ choice.id }}" in Row(s) with (title, id)
+            @for (row of getRowForChoice(choice.id); track row.id) {
+              ("{{ row.title }}",&nbsp;"{{ row.id }}")&nbsp;
+            }
+            at least one score with a missing point type.</ngb-alert
           >
         }
       </div>
