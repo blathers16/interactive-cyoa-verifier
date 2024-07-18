@@ -29,10 +29,10 @@ import { Score } from '../Models/CYOA/score';
     NgbAccordionCollapse,
     NgbAccordionBody,
     NgbAccordionDirective,
-    NgbAlert
+    NgbAlert,
   ],
   templateUrl: './verifier.component.html',
-  styleUrl: './verifier.component.scss'
+  styleUrl: './verifier.component.scss',
 })
 export class VerifierComponent {
   // ui flags
@@ -64,6 +64,7 @@ export class VerifierComponent {
   cyoa: Project | null = null;
 
   toggleClearPicker() {
+    this.cyoa = null
     this.clearPicker = !this.clearPicker;
   }
 
@@ -183,7 +184,7 @@ export class VerifierComponent {
     if (r.reqId3 !== r.reqId3.trim()) valid = false;
 
     if (r.orRequired.some((id: ID) => id.req !== id.req.trim())) valid = false;
-    
+
     try {
       if (!r.requireds.every((req: Requirement) => this.validateRequirementNoWhitespace(req))) valid = false;
     } catch (e: any) {
@@ -244,8 +245,6 @@ export class VerifierComponent {
 
     const ids = this.allChoices.map((c: RowChoice) => c.id);
 
-    this.hasDuplicateChoices = new Set(ids).size !== ids.length;
-
     this.hasDuplicateChoices = true;
 
     if (this.hasDuplicateChoices) {
@@ -253,16 +252,18 @@ export class VerifierComponent {
       this.allChoices.forEach((c: RowChoice) => {
         if (c.id in valuesSoFar) {
           this.allChoices
-            .filter((c2: RowChoice) => (c2.id === c.id))
+            .filter((c2: RowChoice) => c2.id === c.id)
             .forEach((c3: RowChoice) => {
-              this.duplicateChoices.push(c3)
-        })
+              this.duplicateChoices.push(c3);
+            });
         }
         valuesSoFar[c.id] = true;
       });
     }
 
     this.duplicateChoices = uniqWith(this.duplicateChoices, isEqual);
+
+    this.hasDuplicateChoices = this.duplicateChoices.length > 0;
 
     this.cyoa?.rows.forEach((r: Row) => {
       r.requireds.forEach((req: Requirement) => {
@@ -355,7 +356,6 @@ export class VerifierComponent {
         });
       });
     });
-
 
     this.activated = this.cyoa!.activated;
 

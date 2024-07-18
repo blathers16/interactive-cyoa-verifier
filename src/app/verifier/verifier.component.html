@@ -369,5 +369,102 @@
         }
       </div>
     }
+    @if(cyoa){
+    <div ngbAccordion>
+      <div ngbAccordionItem>
+        <h2 ngbAccordionHeader>
+          <button ngbAccordionButton>Partial Map of CYOA (WIP)</button>
+        </h2>
+        <div ngbAccordionCollapse>
+          <div ngbAccordionBody>
+            <ng-template>
+              <ul>
+                @for (row of cyoa.rows; track row.id) {
+                  <li>Row: ("{{ row.id }}", "{{ row.title }}")</li>
+                  <ul>
+                    @for (choice of row?.objects; track choice.id) {
+                      <li>Choice: ("{{ choice.id }}", "{{ choice.title }}")</li>
+                      <ul>
+                        @for (req of choice.requireds; track req.id) {
+                          <li>
+                            <ol>
+                              <li>Requirement:</li>
+                              <li>Type: "{{ req.type }}"</li>
+                              <li>Operator "{{ req.operator }}"</li>
+                              <li>Not Requirement: "{{ req.required }}"</li>
+                              @if (req.reqId) {
+                                <li>Choice: ("{{ req.reqId }}", "{{ getChoice(req.reqId)?.title }}")</li>
+                                <li>
+                                  From row ("{{
+                                    getRowForChoice(getChoice(req.reqId)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId)?.id ?? '')[0].id
+                                      : ''
+                                  }}",
+                                  {{
+                                    getRowForChoice(getChoice(req.reqId)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId)?.id ?? '')[0].title
+                                      : ''
+                                  }}")
+                                </li>
+                              }
+                              @if (req.reqId1) {
+                                <li>Choice: ("{{ req.reqId1 }}", "{{ getChoice(req.reqId1)?.title }}")</li>
+                                <li>
+                                  From row ("{{
+                                    getRowForChoice(getChoice(req.reqId1)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId1)?.id ?? '')[0].id
+                                      : ''
+                                  }}",
+                                  {{
+                                    getRowForChoice(getChoice(req.reqId1)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId1)?.id ?? '')[0].title
+                                      : ''
+                                  }}")
+                                </li>
+                              }
+                              @if (req.reqId2) {
+                                <li>Choice: ("{{ req.reqId2 }}", "{{ getChoice(req.reqId2)?.title }}")</li>
+                                <li>
+                                  From row ("{{
+                                    getRowForChoice(getChoice(req.reqId2)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId2)?.id ?? '')[0].id
+                                      : ''
+                                  }}",
+                                  {{
+                                    getRowForChoice(getChoice(req.reqId2)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId2)?.id ?? '')[0].title
+                                      : ''
+                                  }}")
+                                </li>
+                              }
+                              @if (req.reqId3) {
+                                <li>Choice: ("{{ req.reqId3 }}", "{{ getChoice(req.reqId3)?.title }}")</li>
+                                <li>
+                                  From row ("{{
+                                    getRowForChoice(getChoice(req.reqId3)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId3)?.id ?? '')[0].id
+                                      : ''
+                                  }}",
+                                  {{
+                                    getRowForChoice(getChoice(req.reqId3)?.id ?? '').length > 0
+                                      ? getRowForChoice(getChoice(req.reqId3)?.id ?? '')[0].title
+                                      : ''
+                                  }}")
+                                </li>
+                              }
+                            </ol>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </ul>
+                }
+              </ul>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
   }
 </div>
