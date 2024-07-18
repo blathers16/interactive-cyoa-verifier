@@ -64,7 +64,7 @@ export class VerifierComponent {
   cyoa: Project | null = null;
 
   toggleClearPicker() {
-    this.cyoa = null
+    this.cyoa = null;
     this.clearPicker = !this.clearPicker;
   }
 
