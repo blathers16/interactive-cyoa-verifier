@@ -1,0 +1,3 @@
+[submodule "icc-plus-2"]
+	path = icc-plus-2
+	url = https://github.com/wahaha303/ICC-Plus-Svelte.git
